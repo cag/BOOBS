@@ -26,7 +26,7 @@ Copyright (c) 2010 Alan Lu
 --]]
 
 local J = love.joystick
-local Q = require "queues"
+local K = love.keyboard
 local T = love.timer
 local print = print
 local tostring = tostring
@@ -35,150 +35,87 @@ local tostring = tostring
 -- this is a module for some juicy input mangling on top of LÖVE
 -- specifically, it is useful for processing timed priority queue sequences in input
 -- good for fighting games and beat-em ups and similar stuff
--- it is also designed to handle lube ;)
--- being framethrottled = easier time implementing network support
 
 module "boobs"
 
--- the input update count, don't try to mess with it
-local uc = 0
--- time delta
-local td = 0
+-------------------------------------------------------------------------------
+-- module parameters (feel free to tune)
 
--- for those of you willing to dig and tune...
--- here are some internal parameters for the initialization of this module
+-- where the joystick decides to register a direction
+local dir_reg_threshold = .5
 
--- reserved strings for stuff: . / ; u lu l dl d rd r ru c
--- updates per second
-local s = 30
--- deadzone for joystick input
-local deadzone = .1 -- 10%
--- threshold for directional symbol registration
-local dsthreshold = .5 -- 50%
--- input life length (in updates)
-local life_length = 2 * s -- conversion factor
--- default input linkage time
-local default_il = .1 * s
+-------------------------------------------------------------------------------
+-- utility functions for making directional strings
 
----------------------------------------
--- directional string maekers given yus
-
-local function c2s(xc, yc)
-	if xc < -dsthreshold then
-		if yc < -dsthreshold then return "lu" end
-		if yc > dsthreshold then return "ld" end
+function axes2string(joy, axespair, hflip)
+	local x = J.getAxis(joy, axespair * 2)
+	local y = J.getAxis(joy, axespair * 2 + 1)
+	local drt = dir_reg_threshold
+	
+	local l, r
+	
+	if hflip then
+		l = x > drt
+		r = x < -drt
+	else
+		l = x < -drt
+		r = x > drt
+	end
+	
+	if l then
+		if y < -drt then return "lu"
+		elseif y > drt then return "ld"
+		end
 		return "l"
-	elseif xc > dsthreshold then
-		if yc < -dsthreshold then return "ru" end
-		if yc > dsthreshold then return "rd" end
+	elseif r then
+		if y < -drt then return "ru"
+		elseif y > drt then return "rd"
+		end
 		return "r"
 	end
-	if yc < -dsthreshold then return "u" end
-	if yc > dsthreshold then return "d" end
+	
+	if y < -drt then return "u"
+	elseif y > drt then return "d"
+	end
 	return "c"
 end
 
--- first up, the rather straightforward axes!
-function axesmaek(joy, pair)
-	-- joy in set {0,...,numjoys-1}
-	-- pair in set {1,...}
-	local a = { J.getAxes(joy) }
-	local xc = a[pair * 2 - 1]
-	local yc = a[pair * 2]
-	return c2s(xc, yc)
+function hat2string(joy, hat, hflip)
+	local res = J.getHat(joy, hat)
+	--EPICSTRINGHAX
+	return hflip and res:gsub("([lr])", function(d) return d == "l" and "r" or "l" end) or res
 end
 
--- then we have the infamous hat
-local hatmaek = J.getHat
-
--- lol bawlz
-local function ballmaek(joy, ball)
-	return c2s(J.getBall(joy, ball))
-end
-
----------------------------------------
--- utility functions
-
-
----------------------------------------
--- vars
-local input_wtfbbqs = {} -- wtfbbqs queueueueueues!
-local hov = false -- horizontal orientation value
-
-local maps = {
-	-- direction -> symbol map
-	ds = {};
-	-- button -> symbol map
-	bs = {};
-	-- key -> direction map
-	kd = {};
-	-- joy -> button map
-	jb = {};
-	-- key -> button map
-	kb = {};
-}
-
--- delicious handlers
-
--- for pressing
-local phandlers = {
-	kds = function(k)
-		local d = maps.kd[k]
-		if d then
-			local s = maps.ds[d]
-			if hov then
-				if s == "l" then s = "r"
-				elseif s == "r" then s = "l"
-				end
-			end
-			if s then Q.enq(input_wtfbbqs, {s, T.getTime()}) end
-		end
-	end,
+function keys2string(left, right, up, down, hflip)
+	local u = K.isDown(up)
+	local d = K.isDown(down)
+	local l, r
 	
-	kbs = function(k)
-		local k = maps.kb[k]
-		if b then
-			local s = maps.bs[b]
-			if s then Q.enq(input_wtfbbqs, {s, T.getTime()}) end
-		end
-	end,
-	
-	jds = function(joystick, j)
-		
-	end,
-	
-	jbs = function(joystick, j)
-		
+	if hflip then
+		l = K.isDown(right)
+		r = K.isDown(left)
+	else
+		l = K.isDown(left)
+		r = K.isDown(right)
 	end
-}
-
--- and releasing
-
-
--------------------------------------------------------------------------------
--- the actual part you use to do stuff
-
--- init(players)
--- initializes the input system given # of players
-function init(players)
-	-- love auto-opens our hardware! :)
-	-- setup input queues for players
-	for i = 1, players do
-		input_wtfbbqs[i] = Q.new()
-	end
-end
-
--------------------------------------------------------------------------------
--- some helpful stuff
--- before we get ahead of ourselves:
-
-
--------------------------------------------------------------------------------
-
--- update(dt)
--- updates boobs' internal state to reflect input stuff
--- and resolves pattern-matched callbacks
-function update(dt)
-	-- I AM A CODE MONKEY
 	
+	if l and not r then
+		if u and not d then return "lu"
+		elseif d and not u then return "ld"
+		end
+		return "l"
+	elseif r and not l then
+		if u and not d then return "ru"
+		elseif d and not u then return "rd"
+		end
+		return "r"
+	end
+	if u and not d then return "u"
+	elseif d and not u then return "d"
+	end
+	return "c"
 end
+
+-------------------------------------------------------------------------------
+-- symbol registration
+

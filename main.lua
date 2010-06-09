@@ -28,7 +28,6 @@ Copyright (c) 2010 Alan Lu
 -- this is just a simple testbed for boobs functionality
 
 local boobs = require "boobs"
-local Q = require "queues"
 
 -- framethrottled variation
 function love.run()
@@ -71,14 +70,8 @@ function love.run()
 end
 
 function love.load()
-	print "setting write folder to `impulse'"
-	love.filesystem.setIdentity("impulse")
-	
 	print "disabling key repeat"
 	love.keyboard.setKeyRepeat(0, 0)
-	
-	print "initializing B÷÷BS with two players"
-	boobs.init(2)
 end
 
 function love.update(dt)
