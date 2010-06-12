@@ -72,9 +72,21 @@ end
 function love.load()
 	print "disabling key repeat"
 	love.keyboard.setKeyRepeat(0, 0)
+	
+	mv1 = boobs.movelist:new("fighter")
+	mv1:register_sequence("d rd r p", function(pdx) print("player " .. tostring(pdx) .. " throws a fireball") end)
+	mv1:register_sequence("d rd r d rd r p", function(pdx) print("player " .. tostring(pdx) .. " throws a super fireball") end)
+	mv1:register_sequence("d ld l k", function(pdx) print("player " .. tostring(pdx) .. " whirlwind kicks") end)
+	
+	player1 = boobs.player:new()
+	player1:bind_dir{ type = "axes", joy = 0, pair = 0 }
+	player1:bind_input("p", { type = "button", joy = 0, button = 0 })
+	player1:bind_input("k", { type = "button", joy = 0, button = 1 })
+	player1:set_movelist(mv1)
 end
 
 function love.update(dt)
+	player1:update()
 end
 
 function love.draw()
