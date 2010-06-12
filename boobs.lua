@@ -217,6 +217,7 @@ function player:update()
 	local ldir = self.lastdir
 	local cdir = self.dir()
 	if ldir ~= cdir then
+		self:crawl(ldir)
 		self:crawl(cdir)
 		--print(cdir)
 		self.lastdir = cdir
@@ -311,3 +312,7 @@ function movelist:crawl(sym, poset, pidx)
 	for _,n in ipairs(destroy) do poset[n] = false end
 	for _,n in ipairs(append) do poset[n] = ct end
 end
+
+-------------------------------------------------------------------------------
+-- AND NOW THE FINALE
+function update() for _,p in ipairs(players) do p:update() end end

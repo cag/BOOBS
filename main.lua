@@ -29,77 +29,35 @@ Copyright (c) 2010 Alan Lu
 
 local boobs = require "boobs"
 
--- framethrottled variation
-function love.run()
-	if love.load then love.load(arg) end
-	
-	local throttle = 1/60
-	local dt = throttle
-	
-	-- Main loop time.
-	while true do
-		if love.timer then
-			love.timer.step()
-			dt = dt + love.timer.getDelta()
-		end
-		
-		while dt > 0 do
-			love.update(throttle)
-			dt = dt - throttle
-		end
-		
-		if love.graphics then
-			love.graphics.clear()
-			if love.draw then love.draw() end
-		end
-		-- Process events. Fuck this shit I'm not touching this with a ten foot pole
-		if love.event then
-			for e,a,b,c in love.event.poll() do
-				if e == "q" then
-					if love.audio then
-						love.audio.stop()
-					end
-					return
-				end
-				love.handlers[e](a,b,c)
-			end
-		end
-		if love.timer then love.timer.sleep(1) end
-		if love.graphics then love.graphics.present() end
-	end
-end
-
 function love.load()
 	print "disabling key repeat"
 	love.keyboard.setKeyRepeat(0, 0)
 	
 	mv1 = boobs.movelist:new("fighter")
 	mv1:register_sequence("d rd r p", function(pdx) print("player " .. tostring(pdx) .. " throws a fireball") end)
+	mv1:register_sequence("l ld d rd r p", function(pdx) print("player " .. tostring(pdx) .. " throws a fiery fireball") end)
+	mv1:register_sequence("r d rd p", function(pdx) print("player " .. tostring(pdx) .. " dragon punches") end)
+	mv1:register_sequence("d ld l k", function(pdx) print("player " .. tostring(pdx) .. " hurricane-kicks") end)
 	mv1:register_sequence("d rd r d rd r p", function(pdx) print("player " .. tostring(pdx) .. " throws a super fireball") end)
-	mv1:register_sequence("d ld l k", function(pdx) print("player " .. tostring(pdx) .. " whirlwind kicks") end)
+	mv1:register_sequence("d ld l d ld l k", function(pdx) print("player " .. tostring(pdx) .. " hurricane-kicks really fucking hard") end)
+	mv1:register_sequence("p p r k p", function(pdx) print("player " .. tostring(pdx) .. " RAEPS LAWL") end)
 	
 	player1 = boobs.player:new()
 	player1:bind_dir{ type = "axes", joy = 0, pair = 0 }
+	--player1:bind_dir{ type = "hat", joy = 0, hat = 0 }
 	player1:bind_input("p", { type = "button", joy = 0, button = 0 })
 	player1:bind_input("k", { type = "button", joy = 0, button = 1 })
 	player1:set_movelist(mv1)
+	
+	player2 = boobs.player:new()
+	player2:bind_dir{ type = "keys", l = "left", r = "right", u = "up", d = "down" }
+	player2:bind_input("p", { type = "key", key = "z" })
+	player2:bind_input("k", { type = "key", key = "x" })
+	player2:set_movelist(mv1)
+	
+	player2.hflip = true
 end
 
 function love.update(dt)
-	player1:update()
-end
-
-function love.draw()
-end
-
-function love.keypressed(key, unicode)
-end
-
-function love.keyreleased(key, unicode)
-end
-
-function love.joystickpressed(joystick, button)
-end
-
-function love.joystickreleased(joystick, button)
+	boobs.update()
 end

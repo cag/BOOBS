@@ -1,8 +1,31 @@
-BOOBS
+(.) BOOBS (.)
+=============
 
 A juicy input library for LOVE.
 by your friend
  Alan Lu
+
+== Quick-start guide ==
+1. put boobs.update() in love.update somewhere
+2. make movelists via <movelist identifier> = boobs.movelist:new("name me something unique!")
+3. for each movelist you make, register sequences in them via <movelist identifier>:register_sequence(sequence, callback)
+4. for each player you got, call <player var> = boobs.player:new()
+5. bind joystick axes/hat/keys to directions with <player var>:bind_dir{ direction description }
+6. bind buttons/keys to inputs with <player var>:bind_input(symbol, { input description })
+7. if you want to flip the horizontal axis for a player, set <player var>.hflip = true
+
+== X-TRA NOTES ==
+reserved symbols for directions: l r u d lu ru ld rd
+things are case sensitive unless you normalize your input
+every input you bind produces press events (represented by the symbol you pass in) and release events (represented by symbol.."^")
+sequence tokens, or symbols, are deliminated via whitespace
+callbacks take one argument, the player index, and don't return anything
+players are indexed in the order of their creation
+hadoken is pretty much "d rd r p"
+
+SEE: main.lua for an working example < this will probably be the most useful to look at
+
+RECOMMENDED: use this together with a state machine if your sequences overlap to make character behavior consistent
 
 GOTO: http://www.love2d.org
 Maek gaems.
